@@ -1,0 +1,180 @@
+<div class="container-fluid banner mb-3">
+    <div class="container py-2">
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <div class="container py-4 text-light">
+                    <h2>Plataforma Acácia</h2>
+                    <h5>Genealogia Acadêmica do Brasil</h5>
+
+                    <h6>Acadêmicos: 1.272.590</h6>
+                    <h6>Relações de orientação: 1.404.109</h6>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="container py-4 text-light">
+                    <div>
+                        <H5>Pesquise 2 mestres e/ou doutores e suas conexões:</H5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Nome do mestre/doutor"
+                                aria-label="Nome do mestre/doutor" aria-describedby="Nome do mestre/doutor">
+                            <button class="btn btn-primary" type="button" id="nomePrimeiro">Pesquisar</button>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Nome do mestre/doutor"
+                                aria-label="Nome do mestre/doutor" aria-describedby="Nome do mestre/doutor">
+                            <button class="btn btn-primary" type="button" id="nomeSegundo">Pesquisar</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="text-light text-center">
+                <h2>Grafo de Genealogia Acadêmica</h2>
+            </div>
+            <div class="text-light text-center">
+                <h4>Modo: Descendência</h4>
+                <button class="btn btn-primary my-3" type="button">Mudar visualização</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+
+
+
+
+    <div class="row">
+        <div class="col-12  px-5">
+            <div class="col-12 border border-dark" id="graph" (resized)="onResized($event)">
+            </div>
+
+        </div>
+
+    </div>
+    <div class="mt-3">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-first-tab" data-bs-toggle="tab" data-bs-target="#nav-first"
+                    type="button" role="tab" aria-controls="nav-first" aria-selected="true">{{ this.FirstNodeAlias
+                    }}</button>
+                <button class="nav-link" id="nav-second-tab" data-bs-toggle="tab" data-bs-target="#nav-second"
+                    type="button" role="tab" aria-controls="nav-second" aria-selected="false">{{ this.SecondNodeAlias
+                    }}</button>
+            </div>
+        </nav>
+        <div class="tab-content " id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-first" role="tabpanel" aria-labelledby="nav-first-tab"
+                tabindex="0">
+
+                <h2>Descendentes:</h2>
+                <div class="container">
+                    <div class="row">
+
+                        <div class="col-4">Qtd descentes: {{ FirstNode?.descendant?.length | number }}</div>
+                        <div class="col-4">Qtd descentes diretos: {{ FirstNode?.directDescendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Qtd folhas descentes: {{ FirstNode?.numberDescendantLeafs| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Qtd ascendentes: {{ FirstNode?.ascendant?.length | number }}</div>
+                        <div class="col-4">Qtd ascendentes diretos: {{ FirstNode?.directAscendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Qtd folhas ascendentes: {{ FirstNode?.numberAscendantLeafs | number }}</div>
+                    </div>
+                </div>
+
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">qtd. Ascendentes</th>
+                            <th scope="col">qtd. Descendentes</th>
+                            <th scope="col">qtd. Ascendentes diretos</th>
+                            <th scope="col">qtd. Descendentes diretos</th>
+                            <th scope="col">qtd. folhas Ascendentes</th>
+                            <th scope="col">qtd. folhas Descendentes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of NovoFirstNode; index as i">
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.ascendant.length | number }}</td>
+                            <td>{{ item.descendant.length | number }}</td>
+                            <td>{{ item.directDescendantsNumber | number }}</td>
+                            <td>{{ item.directDescendantsNumber| number }}</td>
+                            <td>{{ item.numberAscendantLeafs | number }}</td>
+                            <td>{{ item.numberDescendantLeafs | number }}</td>
+
+
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="tab-pane fade" id="nav-second" role="tabpanel" aria-labelledby="nav-second-tab" tabindex="0">
+
+
+                <h2>Descendentes:</h2>
+                <div class="container">
+                    <div class="row">
+
+                        <div class="col-4">Qtd descentes: {{ SecondNode?.descendant?.length | number }}</div>
+                        <div class="col-4">Qtd descentes diretos: {{ SecondNode?.directDescendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Qtd folhas descentes: {{ SecondNode?.numberDescendantLeafs| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Qtd ascendentes: {{ SecondNode?.ascendant?.length | number }}</div>
+                        <div class="col-4">Qtd ascendentes diretos: {{ SecondNode?.directAscendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Qtd folhas ascendentes: {{ SecondNode?.numberAscendantLeafs | number }}</div>
+                    </div>
+                </div>
+
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">qtd. Ascendentes</th>
+                            <th scope="col">qtd. Descendentes</th>
+                            <th scope="col">qtd. Ascendentes diretos</th>
+                            <th scope="col">qtd. Descendentes diretos</th>
+                            <th scope="col">qtd. folhas Ascendentes</th>
+                            <th scope="col">qtd. folhas Descendentes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of NovoSecondNode; index as i">
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.ascendant.length | number }}</td>
+                            <td>{{ item.descendant.length | number }}</td>
+                            <td>{{ item.directAscendantsNumber| number }}</td>
+                            <td>{{ item.directDescendantsNumber| number }}</td>
+                            <td>{{ item.numberAscendantLeafs | number }}</td>
+                            <td>{{ item.numberDescendantLeafs | number }}</td>
+
+
+                        </tr>
+                    </tbody>
+                </table>
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
