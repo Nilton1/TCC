@@ -1,4 +1,61 @@
+<div class="modal fade" id="PesquisarModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Lista de pesquisadores</h5>
+                <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+            <div class="modal-body">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link" (click)="prevPage()" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item" *ngFor="let pag of paginas"><a class="page-link"
+                                [ngClass]="{ 'bg-primary text-white': curPage === pag}"
+                                (click)="selectPage(pag)">{{pag}}</a></li>
+                        <li class="page-item">
+                            <a class="page-link" (click)="nextPage()">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Cod</th>
+                            <th scope="col">Pesquisador 1</th>
+                            <th scope="col">Pesquisador 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of dadosPesquisaFiltrado; index as i">
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item[0] }}</td>
+                            <td>{{ item[1] }}</td>
+                            <td><button class="btn btn-primary mx-1" type="button"
+                                    (click)="definirPrimeiro(item[1])">Escolher</button></td>
+                            <td><button class="btn btn-primary mx-1" type="button"
+                                    (click)="definirSegundo(item[1])">Escolher</button></td>
+
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+                    onclick="document.getElementById('textoPesquisado').value = ''"
+                    (click)="fechar()">Finalizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid banner mb-3">
+
     <div class="container py-2">
         <div class="row">
             <div class="col-12 col-lg-6">
@@ -13,17 +70,14 @@
             <div class="col-12 col-lg-6">
                 <div class="container py-4 text-light">
                     <div>
-                        <H5>Pesquise 2 mestres e/ou doutores e suas conexões:</H5>
+                        <H5>Pesquise mestres e/ou doutores e suas conexões:</H5>
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Nome do mestre/doutor"
-                                aria-label="Nome do mestre/doutor" aria-describedby="Nome do mestre/doutor">
-                            <button class="btn btn-primary" type="button" id="nomePrimeiro">Pesquisar</button>
-                        </div>
-
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Nome do mestre/doutor"
-                                aria-label="Nome do mestre/doutor" aria-describedby="Nome do mestre/doutor">
-                            <button class="btn btn-primary" type="button" id="nomeSegundo">Pesquisar</button>
+                            <input #textoPesquisado id="textoPesquisado" value="" type="text" class="form-control"
+                                placeholder="Nome do mestre/doutor" aria-label="Nome do mestre/doutor"
+                                aria-describedby="Nome do mestre/doutor">
+                            <button class="btn btn-primary" type="button" id="pesquisar" data-bs-toggle="modal"
+                                [disabled]="textoPesquisado.value.length<3" data-bs-target="#PesquisarModal"
+                                (click)="EncontrarPesquisadores(textoPesquisado.value)">Pesquisar</button>
                         </div>
 
                     </div>
@@ -34,9 +88,13 @@
             <div class="text-light text-center">
                 <h2>Grafo de Genealogia Acadêmica</h2>
             </div>
-            <div class="text-light text-center">
+            <div class="text-light text-center" *ngIf="decendente">
                 <h4>Modo: Descendência</h4>
-                <button class="btn btn-primary my-3" type="button">Mudar visualização</button>
+                <button class="btn btn-primary my-3" type="button" (click)="inverter()">Mudar visualização</button>
+            </div>
+            <div class="text-light text-center" *ngIf="!decendente">
+                <h4>Modo: Ascendência</h4>
+                <button class="btn btn-primary my-3" type="button" (click)="inverter()">Mudar visualização</button>
             </div>
         </div>
     </div>
@@ -44,7 +102,18 @@
 <div class="container">
 
 
+    <div class="d-flex flex-row-reverse mx-5 my-2">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                Nível selecionado: {{nivelSelecionado}}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                <li *ngFor="let nivel of  [].constructor(numMaxNiveis+2) ; let x = index"><a class="dropdown-item" (click)="selecionaNivel(x)">{{x}}</a></li>
+            </ul>
+        </div>
 
+    </div>
 
     <div class="row">
         <div class="col-12  px-5">
@@ -58,10 +127,12 @@
         <nav>
             <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-first-tab" data-bs-toggle="tab" data-bs-target="#nav-first"
-                    type="button" role="tab" aria-controls="nav-first" aria-selected="true">{{ this.FirstNodeAlias
+                    type="button" role="tab" aria-controls="nav-first" aria-selected="true" (click)="changeTab(0)">{{
+                    this.FirstNodeAlias
                     }}</button>
                 <button class="nav-link" id="nav-second-tab" data-bs-toggle="tab" data-bs-target="#nav-second"
-                    type="button" role="tab" aria-controls="nav-second" aria-selected="false">{{ this.SecondNodeAlias
+                    type="button" role="tab" aria-controls="nav-second" aria-selected="false" (click)="changeTab(1)">{{
+                    this.SecondNodeAlias
                     }}</button>
             </div>
         </nav>
@@ -88,6 +159,19 @@
                 </div>
 
 
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link" (click)="prevPage()" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item" *ngFor="let pag of paginas"><a class="page-link"
+                                [ngClass]="{ 'bg-primary text-white': curPage === pag}"
+                                (click)="selectPage(pag)">{{pag}}</a></li>
+                        <li class="page-item">
+                            <a class="page-link" (click)="nextPage()">Next</a>
+                        </li>
+                    </ul>
+                </nav>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -102,7 +186,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let item of NovoFirstNode; index as i">
+                        <tr *ngFor="let item of NovoFirstNodeFiltrado; index as i">
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.name }}</td>
                             <td>{{ item.ascendant.length | number }}</td>
@@ -118,7 +202,7 @@
                 </table>
 
             </div>
-            <div class="tab-pane fade" id="nav-second" role="tabpanel" aria-labelledby="nav-second-tab" tabindex="0">
+            <div class="tab-pane fade" id="nav-second" role="tabpanel" aria-labelledby="nav-second-tab" tabindex="1">
 
 
                 <h2>Descendentes:</h2>
@@ -140,6 +224,19 @@
                 </div>
 
 
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link" (click)="prevPage()" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item" *ngFor="let pag of paginas"><a class="page-link"
+                                [ngClass]="{ 'bg-primary text-white': curPage === pag}"
+                                (click)="selectPage(pag)">{{pag}}</a></li>
+                        <li class="page-item">
+                            <a class="page-link" (click)="nextPage()">Next</a>
+                        </li>
+                    </ul>
+                </nav>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -154,7 +251,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let item of NovoSecondNode; index as i">
+                        <tr *ngFor="let item of NovoSecondNodeFiltrado; index as i">
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.name }}</td>
                             <td>{{ item.ascendant.length | number }}</td>

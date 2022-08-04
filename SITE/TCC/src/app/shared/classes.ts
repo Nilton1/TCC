@@ -70,36 +70,39 @@ export class NodeDescription {
 
 
 export class pesquisador {
-    source_id_lattes: string
-    target_id_lattes: string
-    academic_degree: string
-    start_year: string
-    conclusion_year: string
-    course: string
-    institution: string
-    thesis: string
-    major_area: string
+    origem_id_lattes: string
+    destino_id_lattes: string
+    ano_inicio: string
+    ano_conclusao: string
+    curso: string
+    instituicao: string
+    tese: string
+    grande_area: string
     area: string
+    tipo_orientacao:string
+    titulacao: string
 
-    constructor(source_id_lattes: string,
-        target_id_lattes: string,
-        academic_degree: string,
-        start_year: string,
-        conclusion_year: string,
-        course: string,
-        institution: string,
-        thesis: string,
-        major_area: string,
-        area: string) {
-        this.source_id_lattes = source_id_lattes
-        this.target_id_lattes = target_id_lattes
-        this.academic_degree = academic_degree
-        this.start_year = start_year
-        this.conclusion_year = conclusion_year
-        this.course = course
-        this.institution = institution
-        this.thesis = thesis
-        this.major_area = major_area
+    constructor(origem_id_lattes: string,
+        destino_id_lattes: string,
+        ano_inicio: string,
+        ano_conclusao: string,
+        curso: string,
+        instituicao: string,
+        tese: string,
+        grande_area: string,
+        area: string,
+        tipo_orientacao:string,
+        titulacao: string) {
+        this.origem_id_lattes = origem_id_lattes
+        this.destino_id_lattes = destino_id_lattes
+        this.ano_inicio = ano_inicio
+        this.ano_conclusao = ano_conclusao
+        this.curso = curso
+        this.instituicao = instituicao
+        this.tese = tese
+        this.grande_area = grande_area
         this.area = area
+        this.tipo_orientacao = tipo_orientacao
+        this.titulacao = titulacao
     }
 }
