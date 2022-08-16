@@ -7,6 +7,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ResearchesTreesComponent } from './researches-trees/researches-trees.component';
 import { HeaderComponent } from './header/header.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { HeaderComponent } from './header/header.component';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    AngularResizeEventModule
+    AngularResizeEventModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

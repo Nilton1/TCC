@@ -88,11 +88,11 @@
             <div class="text-light text-center">
                 <h2>Grafo de Genealogia Acadêmica</h2>
             </div>
-            <div class="text-light text-center" *ngIf="decendente">
+            <div class="text-light text-center" *ngIf="descendente">
                 <h4>Modo: Descendência</h4>
                 <button class="btn btn-primary my-3" type="button" (click)="inverter()">Mudar visualização</button>
             </div>
-            <div class="text-light text-center" *ngIf="!decendente">
+            <div class="text-light text-center" *ngIf="!descendente">
                 <h4>Modo: Ascendência</h4>
                 <button class="btn btn-primary my-3" type="button" (click)="inverter()">Mudar visualização</button>
             </div>
@@ -101,17 +101,24 @@
 </div>
 <div class="container">
 
-
-    <div class="d-flex flex-row-reverse mx-5 my-2">
+    
+    <div class="d-flex justify-content-around  flex-row mx-5 my-2">
+        
+        <input #textoPesquisaGrafo id="textoPesquisaGrafo" [(ngModel)]="pesquisaGrafo" (input)="filtrarGrafoInput()" type="text" class="form-control"
+                                placeholder="Digite para encontrar no grafo..." aria-label="Digite para encontrar no grafo..."
+                                aria-describedby="Nome pesquisador para se encontrar">
+        <span class="mx-2"></span>
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 Nível selecionado: {{nivelSelecionado}}
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                <li *ngFor="let nivel of  [].constructor(numMaxNiveis+2) ; let x = index"><a class="dropdown-item" (click)="selecionaNivel(x)">{{x}}</a></li>
+                <li *ngFor="let nivel of  [].constructor(numMaxNiveis+1) ; let x = index"><a class="dropdown-item"
+                        (click)="selecionaNivel(x)">{{x}}</a></li>
             </ul>
         </div>
+        
 
     </div>
 
@@ -128,38 +135,71 @@
             <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active" id="nav-first-tab" data-bs-toggle="tab" data-bs-target="#nav-first"
                     type="button" role="tab" aria-controls="nav-first" aria-selected="true" (click)="changeTab(0)">{{
-                    this.FirstNodeAlias
+                    this.FirstNode?.name
                     }}</button>
                 <button class="nav-link" id="nav-second-tab" data-bs-toggle="tab" data-bs-target="#nav-second"
                     type="button" role="tab" aria-controls="nav-second" aria-selected="false" (click)="changeTab(1)">{{
-                    this.SecondNodeAlias
+                    this.SecondNode?.name
                     }}</button>
             </div>
         </nav>
         <div class="tab-content " id="nav-tabContent">
             <div class="tab-pane fade show active" id="nav-first" role="tabpanel" aria-labelledby="nav-first-tab"
                 tabindex="0">
+                <!-- this.decendente  -->
 
-                <h2>Descendentes:</h2>
-                <div class="container">
+                <div class="container" *ngIf="descendente">
+                    <h2>Descendentes:</h2>
                     <div class="row">
 
                         <div class="col-4">Qtd descentes: {{ FirstNode?.descendant?.length | number }}</div>
-                        <div class="col-4">Qtd descentes diretos: {{ FirstNode?.directDescendantsNumber | number }}
+                        <div class="col-4">Qtd descentes diretos: {{ FirstNode?.directDescendants?.length | number  }}
                         </div>
                         <div class="col-4">Qtd folhas descentes: {{ FirstNode?.numberDescendantLeafs| number }}</div>
                     </div>
                     <div class="row">
 
+                        <div class="col-4">Impacto: {{ impacto(FirstNode?.descendant)| number}}</div>
+                        <div class="col-4">Largura: {{ FirstNode?.widthDescendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Profundidade: {{ FirstNode?.depthDescendant| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Fecundidade: {{ FirstNode?.fertilityDescendant | number }}</div>
+                        <div class="col-4">Fecundidade ponderada: {{ FirstNode?.fertilityWeightedDescendant | number }}
+                        </div>
+                        <div class="col-4">Maior Largura: {{ FirstNode?.greaterWidthDescendant| number }}</div>
+                    </div>
+                </div>
+
+                <div class="container" *ngIf="!descendente">
+                    <h2>Ascendentes:</h2>
+                    <div class="row">
+
                         <div class="col-4">Qtd ascendentes: {{ FirstNode?.ascendant?.length | number }}</div>
                         <div class="col-4">Qtd ascendentes diretos: {{ FirstNode?.directAscendantsNumber | number }}
                         </div>
-                        <div class="col-4">Qtd folhas ascendentes: {{ FirstNode?.numberAscendantLeafs | number }}</div>
+                        <div class="col-4">Qtd folhas ascendentes: {{ FirstNode?.numberAscendantLeafs| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Impacto: {{ impacto(FirstNode?.ascendant)| number}}</div>
+                        <div class="col-4">Largura: {{ FirstNode?.widthAscendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Profundidade: {{ FirstNode?.depthAscendant| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Fecundidade: {{ FirstNode?.fertilityAscendant | number }}</div>
+                        <div class="col-4">Fecundidade ponderada: {{ FirstNode?.fertilityWeightedAscendant | number }}
+                        </div>
+                        <div class="col-4">Maior Largura: {{ FirstNode?.greaterWidthAscendant| number }}</div>
                     </div>
                 </div>
 
 
-                <nav aria-label="Page navigation example">
+                <nav aria-label="Page navigation example" class="my-4">
                     <ul class="pagination justify-content-center">
                         <li class="page-item">
                             <a class="page-link" (click)="prevPage()" tabindex="-1" aria-disabled="true">Previous</a>
@@ -177,26 +217,30 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
-                            <th scope="col">qtd. Ascendentes</th>
                             <th scope="col">qtd. Descendentes</th>
-                            <th scope="col">qtd. Ascendentes diretos</th>
                             <th scope="col">qtd. Descendentes diretos</th>
-                            <th scope="col">qtd. folhas Ascendentes</th>
                             <th scope="col">qtd. folhas Descendentes</th>
+                            <th scope="col">Impacto</th>
+                            <th scope="col">Largura</th>
+                            <th scope="col">Profundidade</th>
+                            <th scope="col">Fecundidade</th>
+                            <th scope="col">Fecundidade ponderada</th>
+                            <th scope="col">Maior largura</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let item of NovoFirstNodeFiltrado; index as i">
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.name }}</td>
-                            <td>{{ item.ascendant.length | number }}</td>
                             <td>{{ item.descendant.length | number }}</td>
-                            <td>{{ item.directDescendantsNumber | number }}</td>
                             <td>{{ item.directDescendantsNumber| number }}</td>
-                            <td>{{ item.numberAscendantLeafs | number }}</td>
                             <td>{{ item.numberDescendantLeafs | number }}</td>
-
-
+                            <td>{{ impacto(item.ascendant) | number }}</td>
+                            <td>{{ item.widthAscendantsNumber | number }}</td>
+                            <td>{{ item.depthDescendant | number }}</td>
+                            <td>{{ item.fertilityDescendant | number }}</td>
+                            <td>{{ item.fertilityWeightedDescendant | number }}</td>
+                            <td>{{ item.greaterWidthDescendant | number }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -205,26 +249,58 @@
             <div class="tab-pane fade" id="nav-second" role="tabpanel" aria-labelledby="nav-second-tab" tabindex="1">
 
 
-                <h2>Descendentes:</h2>
-                <div class="container">
+                <div class="container" *ngIf="descendente">
+                    <h2>Descendentes:</h2>
                     <div class="row">
 
                         <div class="col-4">Qtd descentes: {{ SecondNode?.descendant?.length | number }}</div>
-                        <div class="col-4">Qtd descentes diretos: {{ SecondNode?.directDescendantsNumber | number }}
+                        <div class="col-4">Qtd descentes diretos: {{ SecondNode?.directDescendants?.length | number }}
                         </div>
                         <div class="col-4">Qtd folhas descentes: {{ SecondNode?.numberDescendantLeafs| number }}</div>
                     </div>
                     <div class="row">
 
-                        <div class="col-4">Qtd ascendentes: {{ SecondNode?.ascendant?.length | number }}</div>
-                        <div class="col-4">Qtd ascendentes diretos: {{ SecondNode?.directAscendantsNumber | number }}
+                        <div class="col-4">Impacto: {{ impacto(SecondNode?.descendant)| number}}</div>
+                        <div class="col-4">Largura: {{ SecondNode?.widthDescendantsNumber | number }}
                         </div>
-                        <div class="col-4">Qtd folhas ascendentes: {{ SecondNode?.numberAscendantLeafs | number }}</div>
+                        <div class="col-4">Profundidade: {{ SecondNode?.depthDescendant| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Fecundidade: {{ SecondNode?.fertilityDescendant | number }}</div>
+                        <div class="col-4">Fecundidade ponderada: {{ SecondNode?.fertilityWeightedDescendant | number }}
+                        </div>
+                        <div class="col-4">Maior Largura: {{ SecondNode?.greaterWidthDescendant| number }}</div>
+                    </div>
+                </div>
+
+                <div class="container" *ngIf="!descendente">
+                    <h2>Ascendentes:</h2>
+                    <div class="row">
+
+                        <div class="col-4">Qtd ascendentes: {{ SecondNode?.ascendant?.length | number }}</div>
+                        <div class="col-4">Qtd ascendentes diretos: {{ SecondNode?.directAscendants?.length | number }}
+                        </div>
+                        <div class="col-4">Qtd folhas ascendentes: {{ SecondNode?.numberAscendantLeafs| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Impacto: {{ impacto(SecondNode?.ascendant)| number}}</div>
+                        <div class="col-4">Largura: {{ SecondNode?.widthAscendantsNumber | number }}
+                        </div>
+                        <div class="col-4">Profundidade: {{ SecondNode?.depthAscendant| number }}</div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-4">Fecundidade: {{ SecondNode?.fertilityAscendant | number }}</div>
+                        <div class="col-4">Fecundidade ponderada: {{ SecondNode?.fertilityWeightedAscendant | number }}
+                        </div>
+                        <div class="col-4">Maior Largura: {{ SecondNode?.greaterWidthAscendant| number }}</div>
                     </div>
                 </div>
 
 
-                <nav aria-label="Page navigation example">
+                <nav aria-label="Page navigation example" class="my-4">
                     <ul class="pagination justify-content-center">
                         <li class="page-item">
                             <a class="page-link" (click)="prevPage()" tabindex="-1" aria-disabled="true">Previous</a>
@@ -242,26 +318,30 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Name</th>
-                            <th scope="col">qtd. Ascendentes</th>
                             <th scope="col">qtd. Descendentes</th>
-                            <th scope="col">qtd. Ascendentes diretos</th>
                             <th scope="col">qtd. Descendentes diretos</th>
-                            <th scope="col">qtd. folhas Ascendentes</th>
                             <th scope="col">qtd. folhas Descendentes</th>
+                            <th scope="col">Impacto</th>
+                            <th scope="col">Largura</th>
+                            <th scope="col">Profundidade</th>
+                            <th scope="col">Fecundidade</th>
+                            <th scope="col">Fecundidade ponderada</th>
+                            <th scope="col">Maior largura</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr *ngFor="let item of NovoSecondNodeFiltrado; index as i">
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.name }}</td>
-                            <td>{{ item.ascendant.length | number }}</td>
                             <td>{{ item.descendant.length | number }}</td>
-                            <td>{{ item.directAscendantsNumber| number }}</td>
                             <td>{{ item.directDescendantsNumber| number }}</td>
-                            <td>{{ item.numberAscendantLeafs | number }}</td>
                             <td>{{ item.numberDescendantLeafs | number }}</td>
-
-
+                            <td>{{ impacto(item.ascendant) | number }}</td>
+                            <td>{{ item.widthAscendantsNumber | number }}</td>
+                            <td>{{ item.depthDescendant | number }}</td>
+                            <td>{{ item.fertilityDescendant | number }}</td>
+                            <td>{{ item.fertilityWeightedDescendant | number }}</td>
+                            <td>{{ item.greaterWidthDescendant | number }}</td>
                         </tr>
                     </tbody>
                 </table>

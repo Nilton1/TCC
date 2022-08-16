@@ -8,7 +8,6 @@ export class valor {
 
 
 export class NodeDescription {
-
     directDescendants: pesquisador[]
     descendant: string[]
     directDescendantsNumber: number
@@ -25,9 +24,14 @@ export class NodeDescription {
     depthAscendant: number
     fertilityDescendant: number
     fertilityAscendant: number
+    fertilityWeightedDescendant: number
+    fertilityWeightedAscendant: number
     levelsDescendants: string[][]
     levelsAscendants: string[][]
+    greaterWidthDescendant: number
+    greaterWidthAscendant: number
     name: string
+    id:string
 
     constructor(directDescendants: pesquisador[],
         descendant: string[],
@@ -43,9 +47,14 @@ export class NodeDescription {
         depthAscendant: number,
         fertilityDescendant: number,
         fertilityAscendant: number,
+        fertilityWeightedDescendant: number,
+        fertilityWeightedAscendant: number,
         levelsDescendants: string[][],
         levelsAscendants: string[][],
-        name: string) {
+        greaterWidthDescendant: number,
+        greaterWidthAscendant: number,
+        name: string,
+        id:string) {
         this.directDescendants = directDescendants
         this.descendant = descendant
         this.directDescendantsNumber = directDescendantsNumber
@@ -62,10 +71,17 @@ export class NodeDescription {
         this.depthAscendant = depthAscendant
         this.fertilityDescendant = fertilityDescendant
         this.fertilityAscendant = fertilityAscendant
+        this.fertilityWeightedDescendant = fertilityWeightedDescendant
+        this.fertilityWeightedAscendant = fertilityWeightedAscendant
         this.levelsDescendants = levelsDescendants
         this.levelsAscendants = levelsAscendants
+        this.greaterWidthDescendant = greaterWidthDescendant
+        this.greaterWidthAscendant = greaterWidthAscendant
         this.name = name
+        this.id = id
     }
+
+    
 }
 
 

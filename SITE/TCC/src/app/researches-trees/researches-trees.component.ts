@@ -4,6 +4,7 @@ import { NodeDescription } from '../shared/classes';
 import ForceGraph, { ForceGraphInstance, LinkObject, NodeObject } from 'force-graph';
 import { ResizedEvent } from 'angular-resize-event';
 import { first } from 'rxjs';
+import { __values } from 'tslib';
 
 interface Aresta {
   source: number,
@@ -17,8 +18,16 @@ interface Aresta {
 })
 export class ResearchesTreesComponent implements OnInit {
 
-  InstanciaGrafo: ForceGraphInstance = ForceGraph()
+  pesquisaGrafo: string = ""
+  highlightNodes = new Set();
+  highlightLinks = new Set();
+  listaPesquisaGrafo = new Set()
+  listaSemelhantes = new Set()
+  hoverNode: NodeObject | null = null;
 
+  InstanciaGrafo: ForceGraphInstance = ForceGraph()
+  
+  listaPrincipal: number[] = []
   chaveKey: string[] = ["chave pendente"]
   NovoFirstNode: NodeDescription[] | null = null
   NovoSecondNode: NodeDescription[] | null = null
@@ -28,17 +37,18 @@ export class ResearchesTreesComponent implements OnInit {
   FirstNodeAlias: string = ""
   SecondNodeAlias: string = ""
 
-  nivelSelecionado:number=0
-  numMaxNiveis:number=0
+  nivelSelecionado: number = 0
+  numMaxNiveis: number = 0
 
   NovoFirstNodeFiltrado: NodeDescription[] | null = null
   NovoSecondNodeFiltrado: NodeDescription[] | null = null
   paginas: number[] = []
-  listaIdsPermitidos:Number[] = []
+  listaIdsPermitidos: Number[] = []
+  numeroVertices: number = 0
 
   dadosPesquisa: string[][] = []
   dadosPesquisaFiltrado: string[][] = []
-  decendente: boolean = true
+  descendente: boolean = true
 
   firstSelectedNode: string = '10011541'
   //secondSelectedNode : string = '1112919781647346'
@@ -168,10 +178,17 @@ export class ResearchesTreesComponent implements OnInit {
 
   }
 
+  impacto(node: string[] | undefined | null): number {
 
+    if (node) {
+      return node.length / (this.listaIdsPermitidos.length + 2);
+    } else {
+      return 0
+    }
+  }
 
   inverter() {
-    this.decendente = !this.decendente
+    this.descendente = !this.descendente
     this.ConsultaNode(this.firstSelectedNode, this.secondSelectedNode);
   }
   definirPrimeiro(primeiro: string) {
@@ -210,48 +227,214 @@ export class ResearchesTreesComponent implements OnInit {
 
 
     const grafo = document.getElementById('graph') as HTMLElement;
-    let listaPrincipal = [Number(this.FirstNodeAlias), Number(this.SecondNodeAlias)]
-    
-    console.log(this.listaIdsPermitidos)
-    // listaPrincipal.forEach(element => {
-    //   if(this.listaIdsPermitidos.includes(String(element.id))){
+    this.listaPrincipal = [Number(this.FirstNodeAlias), Number(this.SecondNodeAlias)]
+    console.log("Tamanho")
+    console.log(this.listaIdsPermitidos.length)
+    console.log(`Numero maximo de vertices ${this.numeroVertices}`)
 
-    //   }
-    // });
+    let allObjs: NodeDescription[] = []
+    if (this.FirstNode) {
+      allObjs.push(this.FirstNode)
+    }
+    if (this.SecondNode) {
+      allObjs.push(this.SecondNode)
+    }
+    this.listaNodes?.forEach(lista => {
+      allObjs = allObjs.concat(lista)
+    });
 
-    this.InstanciaGrafo = ForceGraph()(grafo).nodeLabel('id').nodeColor(d => ((listaPrincipal.includes(Number(d.id))) ? "red" : (this.listaIdsPermitidos.includes(Number(d.id)) ? "blue" : "black")))
-      .graphData(this.graphDataGlobal).width(this.graphWidth).height(this.graphHeight)
+
+
+    this.InstanciaGrafo = ForceGraph()(grafo).nodeRelSize(20)
+      .d3AlphaDecay(0.001)
+      .d3VelocityDecay(0.25)
+      .cooldownTime(20000)
+      .linkColor(() => 'rgba(0,0,0,0.5)')
+      .zoom(0.20).width(this.graphWidth).height(this.graphHeight)
+      .nodeLabel(node => ("" + (allObjs.find((item) => Number(item.id) == node.id)?.name))).graphData(this.graphDataGlobal)
+      .onNodeHover(node => {
+        this.highlightNodes.clear();
+        this.highlightLinks.clear();
+
+        if (node) {
+          //this.highlightNodes.add(node);
+          this.graphDataGlobal.links.forEach(link => {
+
+            if (link.source === node) {
+              this.highlightLinks.add(link)
+              this.highlightNodes.add(link.target)
+
+            }
+          }
+          );
+        }
+
+        this.hoverNode = node || null;
+      })
+      .onLinkHover(link => {
+        this.highlightNodes.clear();
+        this.highlightLinks.clear();
+
+        if (link) {
+          this.highlightLinks.add(link);
+          this.highlightNodes.add(link.source);
+          this.highlightNodes.add(link.target);
+        }
+      })
+      .autoPauseRedraw(false) // keep redrawing after engine has stopped
+      .linkWidth(link => this.highlightLinks.has(link) ? 8 : 1)
+      .linkDirectionalParticles(4)
+      .linkDirectionalArrowLength(15)
+      .linkDirectionalParticleWidth(link => this.highlightLinks.has(link) ? 4 : 0)
+
+      .nodeCanvasObject((node, ctx) => {
+        this.nodePaint(node, (
+          (this.listaPesquisaGrafo.has(node.id)) ? "orange" :
+          (this.listaSemelhantes.has(node.id)) ? "whitegreen" :
+            (node === this.hoverNode) ? "green" :
+              (this.highlightNodes.has(node)) ? "dodgerblue" :
+                (this.listaPrincipal.includes(Number(node.id))) ? "red" :
+                  (this.listaIdsPermitidos.includes(Number(node.id)) ? "blue" : "black")
+
+        ), ctx)
+      }
+      )
+      .nodePointerAreaPaint(this.nodePaint)
+
+    this.InstanciaGrafo.d3Force('center')?.['strength'](0.4)
+    this.InstanciaGrafo.d3Force('link')?.['distance'](100.50)
+    this.InstanciaGrafo.d3Force('link')?.['strength'](0.18)
+    this.InstanciaGrafo.d3Force('collide')?.['distance'](30)
+    this.InstanciaGrafo.d3Force('collide')?.['strength'](4)
+
+    // this.InstanciaGrafo.d3Force('collision')?.['distance'](40)
+    // this.InstanciaGrafo.d3Force('collision')?.['strength'](2)
+
 
   }
 
-  selecionaNivel(valor:number){
+  radiusForce() {
+    return 1;
+  }
+
+
+
+  nodePaint(node: NodeObject, color: string, ctx: CanvasRenderingContext2D) {
+    if ((node.x) && (node.y)) {
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      if (color == 'red') {
+        ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI, false);
+      } else if (color == 'green' || color == 'whitegreen') {
+        ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI, false);
+      } else if (color == 'blue') {
+        ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI, false);
+      } else if (color == 'dodgerblue') {
+        ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI, false);
+      } else {
+        ctx.arc(node.x, node.y, 12, 0, 2 * Math.PI, false);
+      }
+
+      // const label = '1234567890';
+      // const fontSize = 20 ;
+      // ctx.font = `${fontSize}px Sans-Serif`;
+      // ctx.textAlign = 'center';
+      // ctx.textBaseline = 'middle';
+
+
+      if (color == 'orange') {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#F39C12';
+      }else if (color == 'whitegreen') {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#99ff99';
+      }  else if (color == 'green') {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#00a171';
+      } else if (color == 'dodgerblue') {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#1E90FF';
+      } else {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#003300';
+      }
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#003300';
+      //ctx.fillText(label, node.x, node.y);
+    }
+  }
+
+  selecionaNivel(valor: number) {
     this.nivelSelecionado = valor
     this.listaIdsPermitidos = []
-    this.FirstNode?.levelsDescendants.forEach((value,index) =>{
-      if(index<this.nivelSelecionado){
-        this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i=>Number(i))]
-      }
-    });
+    if (this.descendente) {
+      this.FirstNode?.levelsDescendants.forEach((value, index) => {
+        if (index < this.nivelSelecionado) {
+          this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i => Number(i))]
+        }
+      });
 
-    this.SecondNode?.levelsDescendants.forEach((value,index) =>{
-      if(index<this.nivelSelecionado){
-        this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i=>Number(i))]
-      }
-    });
+      this.SecondNode?.levelsDescendants.forEach((value, index) => {
+        if (index < this.nivelSelecionado) {
+          this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i => Number(i))]
+        }
+      });
+    } else {
+      this.FirstNode?.levelsAscendants.forEach((value, index) => {
+        if (index < this.nivelSelecionado) {
+          this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i => Number(i))]
+        }
+      });
+
+      this.SecondNode?.levelsAscendants.forEach((value, index) => {
+        
+        if (index < this.nivelSelecionado) {
+          this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i => Number(i))]
+        }
+      });
+    }
     this.listaIdsPermitidos.push(Number(this.firstSelectedNode))
     this.listaIdsPermitidos.push(Number(this.secondSelectedNode))
     this.plotGrafo()
-    
+
+  }
+  filtrarGrafoInput() {
+    this.listaPesquisaGrafo.clear()
+    if (this.pesquisaGrafo.trim().length > 0) {
+      if (this.SecondNode?.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
+        this.listaPesquisaGrafo.add(Number(this.SecondNode?.id))
+      }
+
+      if (this.FirstNode?.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
+        this.listaPesquisaGrafo.add(Number(this.FirstNode?.id))
+      }
+      
+      this.NovoFirstNode?.forEach((node, index) => {
+        if (node.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
+          this.listaPesquisaGrafo.add(Number(node.id))
+        }
+      });
+
+      this.NovoSecondNode?.forEach((node, index) => {
+        if (node.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
+          this.listaPesquisaGrafo.add(Number(node.id))
+        }
+      });
+    }
+    console.log(this.listaPesquisaGrafo)
   }
 
   ConsultaNode(nodeNumberFirst: string, nodeNumberSecond: string) {
-    if (this.decendente) {
+    this.pesquisaGrafo = ""
+    if (this.descendente) {
       console.log("descendente")
       this.dadosGrado.getNode(nodeNumberFirst, nodeNumberSecond).subscribe((result) => {
 
         this.FirstNodeAlias = nodeNumberFirst
         this.SecondNodeAlias = nodeNumberSecond
-        
+
         this.listaNodes = result
         console.log(this.listaNodes)
         this.listaNumeros = []
@@ -262,8 +445,6 @@ export class ResearchesTreesComponent implements OnInit {
           //console.log(ListaNovoNode)
           for (const nodeLocal of ListaNovoNode) {
             for (const x of nodeLocal.directDescendants) {
-              console.log(x.origem_id_lattes)
-              console.log(x.destino_id_lattes)
               this.listaNumeros.push(Number(x.origem_id_lattes))
               this.listaNumeros.push(Number(x.destino_id_lattes))
               this.listaConexoes.push({
@@ -274,29 +455,45 @@ export class ResearchesTreesComponent implements OnInit {
           }
         }
 
-        this.FirstNode = this.listaNodes[0].shift() || null
-        this.SecondNode = this.listaNodes[1].shift() || null
+        const first = this.listaNodes[0].shift() || null
+        const second = this.listaNodes[1].shift() || null
+
+        this.FirstNode = first
+        this.SecondNode = second
+        
+
         let maxFirst = 0
         let maxSecond = 0
-        if(this.FirstNode?.levelsDescendants){
+        
+        if (this.FirstNode?.levelsDescendants) {
           maxFirst = this.FirstNode.levelsDescendants.length
         }
 
-        if(this.SecondNode?.levelsDescendants){
+        if (this.SecondNode?.levelsDescendants) {
           maxSecond = this.SecondNode.levelsDescendants.length
         }
         
-        this.numMaxNiveis = (maxFirst>maxSecond?maxFirst:maxSecond)
-        this.nivelSelecionado = this.numMaxNiveis + 1
         this.NovoFirstNode = this.listaNodes[0]
         this.NovoSecondNode = this.listaNodes[1]
 
-        console.log(this.SecondNode)
+        this.numMaxNiveis = (maxFirst > maxSecond ? maxFirst : maxSecond)
+        this.selecionaNivel(this.numMaxNiveis)
+        this.nivelSelecionado = this.numMaxNiveis
+        
 
+        
+        const RaizesIguais = this.FirstNode?.descendant.filter( value => this.SecondNode?.descendant.includes(value))
+
+        RaizesIguais?.forEach(item => this.listaSemelhantes.add(Number(item)))
+
+        console.log(this.listaSemelhantes)
+
+        let listaNumerosSet = new Set(this.listaNumeros)
+        this.numeroVertices = listaNumerosSet.size + 2
 
         this.graphDataGlobal = {
-          nodes: [... new Set(this.listaNumeros)].map(i => ({
-            id: i,
+          nodes: [...listaNumerosSet].map(i => ({
+            id: i
           })),
           links: this.listaConexoes.map(id => ({
             source: id.source,
@@ -325,7 +522,7 @@ export class ResearchesTreesComponent implements OnInit {
         this.listaConexoes = []
         this.listaNumeros.push(Number(nodeNumberFirst))
         this.listaNumeros.push(Number(nodeNumberSecond))
-        for (const ListaNovoNode of this.listaNodes){
+        for (const ListaNovoNode of this.listaNodes) {
           //console.log(ListaNovoNode)
           for (const nodeLocal of ListaNovoNode) {
             for (const x of nodeLocal.directAscendants) {
@@ -347,21 +544,22 @@ export class ResearchesTreesComponent implements OnInit {
 
         let maxFirst = 0
         let maxSecond = 0
-        if(this.FirstNode?.levelsAscendants){
+        if (this.FirstNode?.levelsAscendants) {
           maxFirst = this.FirstNode.levelsAscendants.length
         }
 
-        if(this.SecondNode?.levelsAscendants){
+        if (this.SecondNode?.levelsAscendants) {
           maxSecond = this.SecondNode.levelsAscendants.length
         }
-        
-        this.numMaxNiveis = (maxFirst>maxSecond?maxFirst:maxSecond)
-        this.nivelSelecionado = this.numMaxNiveis + 1
+
+        this.numMaxNiveis = (maxFirst > maxSecond ? maxFirst : maxSecond)
+        this.selecionaNivel(this.numMaxNiveis)
+        this.nivelSelecionado = this.numMaxNiveis
         console.log(this.SecondNode)
-
-
+        let listaNumerosSet = new Set(this.listaNumeros)
+        this.numeroVertices = listaNumerosSet.size + 2
         this.graphDataGlobal = {
-          nodes: [... new Set(this.listaNumeros)].map(i => ({
+          nodes: [...listaNumerosSet].map(i => ({
             id: i,
           })),
           links: this.listaConexoes.map(id => ({
