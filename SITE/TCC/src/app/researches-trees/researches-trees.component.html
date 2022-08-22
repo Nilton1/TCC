@@ -152,7 +152,7 @@
                     <h2>Descendentes:</h2>
                     <div class="row">
 
-                        <div class="col-4">Qtd descentes: {{ FirstNode?.descendant?.length | number }}</div>
+                        <div class="col-4" *ngIf="FirstNode?.levelsDescendants">Qtd descentes: {{ conexoesDiretas(FirstNode?.levelsDescendants)| number }}</div>
                         <div class="col-4">Qtd descentes diretos: {{ FirstNode?.directDescendants?.length | number  }}
                         </div>
                         <div class="col-4">Qtd folhas descentes: {{ FirstNode?.numberDescendantLeafs| number }}</div>
@@ -177,7 +177,7 @@
                     <h2>Ascendentes:</h2>
                     <div class="row">
 
-                        <div class="col-4">Qtd ascendentes: {{ FirstNode?.ascendant?.length | number }}</div>
+                        <div class="col-4">Qtd ascendentes: {{ conexoesDiretas(FirstNode?.levelsAscendants) | number }}</div>
                         <div class="col-4">Qtd ascendentes diretos: {{ FirstNode?.directAscendantsNumber | number }}
                         </div>
                         <div class="col-4">Qtd folhas ascendentes: {{ FirstNode?.numberAscendantLeafs| number }}</div>
@@ -253,7 +253,7 @@
                     <h2>Descendentes:</h2>
                     <div class="row">
 
-                        <div class="col-4">Qtd descentes: {{ SecondNode?.descendant?.length | number }}</div>
+                        <div class="col-4">Qtd descentes: {{ conexoesDiretas(SecondNode?.levelsDescendants) | number }}</div>
                         <div class="col-4">Qtd descentes diretos: {{ SecondNode?.directDescendants?.length | number }}
                         </div>
                         <div class="col-4">Qtd folhas descentes: {{ SecondNode?.numberDescendantLeafs| number }}</div>
@@ -278,7 +278,7 @@
                     <h2>Ascendentes:</h2>
                     <div class="row">
 
-                        <div class="col-4">Qtd ascendentes: {{ SecondNode?.ascendant?.length | number }}</div>
+                        <div class="col-4">Qtd ascendentes: {{ conexoesDiretas(SecondNode?.levelsAscendants) | number }}</div>
                         <div class="col-4">Qtd ascendentes diretos: {{ SecondNode?.directAscendants?.length | number }}
                         </div>
                         <div class="col-4">Qtd folhas ascendentes: {{ SecondNode?.numberAscendantLeafs| number }}</div>

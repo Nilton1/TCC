@@ -3,7 +3,7 @@ import { DadosGrafoService } from 'src/services/dados-grafo.service';
 import { NodeDescription } from '../shared/classes';
 import ForceGraph, { ForceGraphInstance, LinkObject, NodeObject } from 'force-graph';
 import { ResizedEvent } from 'angular-resize-event';
-import { first } from 'rxjs';
+import { first, of } from 'rxjs';
 import { __values } from 'tslib';
 
 interface Aresta {
@@ -26,7 +26,7 @@ export class ResearchesTreesComponent implements OnInit {
   hoverNode: NodeObject | null = null;
 
   InstanciaGrafo: ForceGraphInstance = ForceGraph()
-  
+
   listaPrincipal: number[] = []
   chaveKey: string[] = ["chave pendente"]
   NovoFirstNode: NodeDescription[] | null = null
@@ -45,13 +45,14 @@ export class ResearchesTreesComponent implements OnInit {
   paginas: number[] = []
   listaIdsPermitidos: Number[] = []
   numeroVertices: number = 0
+  allObjs: NodeDescription[] = []
 
   dadosPesquisa: string[][] = []
   dadosPesquisaFiltrado: string[][] = []
   descendente: boolean = true
 
   firstSelectedNode: string = '10011541'
-  //secondSelectedNode : string = '1112919781647346'
+  //secondSelectedNode : string = '10011541'
   secondSelectedNode: string = '10013485'
 
   graphDataGlobal: { nodes: NodeObject[], links: LinkObject[] } = {
@@ -176,12 +177,23 @@ export class ResearchesTreesComponent implements OnInit {
       }
     }
 
+
+
   }
 
   impacto(node: string[] | undefined | null): number {
 
     if (node) {
       return node.length / (this.listaIdsPermitidos.length + 2);
+    } else {
+      return 0
+    }
+  }
+
+  conexoesDiretas(diretos: string[][]| null | undefined): number {
+
+    if (diretos && diretos.length>0) {
+      return diretos[0].length;
     } else {
       return 0
     }
@@ -228,30 +240,23 @@ export class ResearchesTreesComponent implements OnInit {
 
     const grafo = document.getElementById('graph') as HTMLElement;
     this.listaPrincipal = [Number(this.FirstNodeAlias), Number(this.SecondNodeAlias)]
-    console.log("Tamanho")
-    console.log(this.listaIdsPermitidos.length)
-    console.log(`Numero maximo de vertices ${this.numeroVertices}`)
 
-    let allObjs: NodeDescription[] = []
-    if (this.FirstNode) {
-      allObjs.push(this.FirstNode)
-    }
-    if (this.SecondNode) {
-      allObjs.push(this.SecondNode)
-    }
-    this.listaNodes?.forEach(lista => {
-      allObjs = allObjs.concat(lista)
-    });
+
+
+
+    //.cooldownTime(20000)
+    //.d3AlphaDecay(0.001)
+    //.d3VelocityDecay(0.05)
 
 
 
     this.InstanciaGrafo = ForceGraph()(grafo).nodeRelSize(20)
-      .d3AlphaDecay(0.001)
-      .d3VelocityDecay(0.25)
-      .cooldownTime(20000)
+      .d3AlphaDecay(0.002)
+      .d3VelocityDecay(0.02)
+      .cooldownTime(100000)
       .linkColor(() => 'rgba(0,0,0,0.5)')
       .zoom(0.20).width(this.graphWidth).height(this.graphHeight)
-      .nodeLabel(node => ("" + (allObjs.find((item) => Number(item.id) == node.id)?.name))).graphData(this.graphDataGlobal)
+      .nodeLabel(node => ("" + (this.allObjs.find((item) => Number(item.id) == node.id)?.name))).graphData(this.graphDataGlobal)
       .onNodeHover(node => {
         this.highlightNodes.clear();
         this.highlightLinks.clear();
@@ -289,12 +294,16 @@ export class ResearchesTreesComponent implements OnInit {
 
       .nodeCanvasObject((node, ctx) => {
         this.nodePaint(node, (
-          (this.listaPesquisaGrafo.has(node.id)) ? "orange" :
-          (this.listaSemelhantes.has(node.id)) ? "whitegreen" :
-            (node === this.hoverNode) ? "green" :
-              (this.highlightNodes.has(node)) ? "dodgerblue" :
-                (this.listaPrincipal.includes(Number(node.id))) ? "red" :
-                  (this.listaIdsPermitidos.includes(Number(node.id)) ? "blue" : "black")
+          (node === this.hoverNode) ? "green" :
+            (this.highlightNodes.has(node)) ? "dodgerblue" : ("" + (this.allObjs.find((item) => Number(item.id) == node.id)?.color))
+          //((const vari  =this.allObjs.find((item) => Number(item.id) == node.id)) ? vari.color)
+
+          //(this.allObjs.find((item) => Number(item.id) == node.id)?.color)
+          // (this.listaPesquisaGrafo.has(node.id)) ? "orange" :
+          //   (this.listaSemelhantes.has(node.id)) ? "whitegreen" :
+
+          //         (this.listaPrincipal.includes(Number(node.id))) ? "red" :
+          //           (this.listaIdsPermitidos.includes(Number(node.id)) ? "blue" : "black")
 
         ), ctx)
       }
@@ -302,13 +311,11 @@ export class ResearchesTreesComponent implements OnInit {
       .nodePointerAreaPaint(this.nodePaint)
 
     this.InstanciaGrafo.d3Force('center')?.['strength'](0.4)
-    this.InstanciaGrafo.d3Force('link')?.['distance'](100.50)
+    this.InstanciaGrafo.d3Force('link')?.['distance'](50.50)
     this.InstanciaGrafo.d3Force('link')?.['strength'](0.18)
     this.InstanciaGrafo.d3Force('collide')?.['distance'](30)
     this.InstanciaGrafo.d3Force('collide')?.['strength'](4)
 
-    // this.InstanciaGrafo.d3Force('collision')?.['distance'](40)
-    // this.InstanciaGrafo.d3Force('collision')?.['strength'](2)
 
 
   }
@@ -346,10 +353,10 @@ export class ResearchesTreesComponent implements OnInit {
       if (color == 'orange') {
         ctx.lineWidth = 3;
         ctx.strokeStyle = '#F39C12';
-      }else if (color == 'whitegreen') {
+      } else if (color == 'whitegreen') {
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#99ff99';
-      }  else if (color == 'green') {
+      } else if (color == 'green') {
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#00a171';
       } else if (color == 'dodgerblue') {
@@ -389,7 +396,7 @@ export class ResearchesTreesComponent implements OnInit {
       });
 
       this.SecondNode?.levelsAscendants.forEach((value, index) => {
-        
+
         if (index < this.nivelSelecionado) {
           this.listaIdsPermitidos = [...this.listaIdsPermitidos, ...value.map(i => Number(i))]
         }
@@ -410,7 +417,7 @@ export class ResearchesTreesComponent implements OnInit {
       if (this.FirstNode?.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
         this.listaPesquisaGrafo.add(Number(this.FirstNode?.id))
       }
-      
+
       this.NovoFirstNode?.forEach((node, index) => {
         if (node.name.toLowerCase().includes(this.pesquisaGrafo.toLowerCase())) {
           this.listaPesquisaGrafo.add(Number(node.id))
@@ -428,6 +435,7 @@ export class ResearchesTreesComponent implements OnInit {
 
   ConsultaNode(nodeNumberFirst: string, nodeNumberSecond: string) {
     this.pesquisaGrafo = ""
+    this.listaSemelhantes.clear()
     if (this.descendente) {
       console.log("descendente")
       this.dadosGrado.getNode(nodeNumberFirst, nodeNumberSecond).subscribe((result) => {
@@ -460,11 +468,11 @@ export class ResearchesTreesComponent implements OnInit {
 
         this.FirstNode = first
         this.SecondNode = second
-        
+
 
         let maxFirst = 0
         let maxSecond = 0
-        
+
         if (this.FirstNode?.levelsDescendants) {
           maxFirst = this.FirstNode.levelsDescendants.length
         }
@@ -472,21 +480,22 @@ export class ResearchesTreesComponent implements OnInit {
         if (this.SecondNode?.levelsDescendants) {
           maxSecond = this.SecondNode.levelsDescendants.length
         }
-        
+
         this.NovoFirstNode = this.listaNodes[0]
         this.NovoSecondNode = this.listaNodes[1]
 
         this.numMaxNiveis = (maxFirst > maxSecond ? maxFirst : maxSecond)
         this.selecionaNivel(this.numMaxNiveis)
         this.nivelSelecionado = this.numMaxNiveis
-        
 
-        
-        const RaizesIguais = this.FirstNode?.descendant.filter( value => this.SecondNode?.descendant.includes(value))
+
+
+        const RaizesIguais = this.FirstNode?.descendant.filter(value => this.SecondNode?.descendant.includes(value))
+
 
         RaizesIguais?.forEach(item => this.listaSemelhantes.add(Number(item)))
 
-        console.log(this.listaSemelhantes)
+
 
         let listaNumerosSet = new Set(this.listaNumeros)
         this.numeroVertices = listaNumerosSet.size + 2
@@ -500,9 +509,10 @@ export class ResearchesTreesComponent implements OnInit {
             target: id.target
           }))
         }
-
-        this.plotGrafo()
         this.filtering()
+        this.coloring()
+        this.plotGrafo()
+
 
         //console.log(this.NovoNode.ascendant)
 
@@ -555,7 +565,11 @@ export class ResearchesTreesComponent implements OnInit {
         this.numMaxNiveis = (maxFirst > maxSecond ? maxFirst : maxSecond)
         this.selecionaNivel(this.numMaxNiveis)
         this.nivelSelecionado = this.numMaxNiveis
-        console.log(this.SecondNode)
+
+        const RaizesIguais = this.FirstNode?.ascendant.filter(value => this.SecondNode?.ascendant.includes(value))
+
+        RaizesIguais?.forEach(item => this.listaSemelhantes.add(Number(item)))
+
         let listaNumerosSet = new Set(this.listaNumeros)
         this.numeroVertices = listaNumerosSet.size + 2
         this.graphDataGlobal = {
@@ -568,14 +582,44 @@ export class ResearchesTreesComponent implements OnInit {
           }))
         }
 
-        this.plotGrafo()
         this.filtering()
+        this.coloring()
+        this.plotGrafo()
+
 
         //console.log(this.NovoNode.ascendant)
 
 
       })
     }
+
+
+  }
+
+
+  coloring() {
+    this.allObjs = []
+    if (this.FirstNode) {
+      this.allObjs.push(this.FirstNode)
+    }
+    if (this.SecondNode) {
+      this.allObjs.push(this.SecondNode)
+    }
+    if (this.listaNodes) {
+
+
+      for (const node of this.listaNodes) {
+        this.allObjs = this.allObjs.concat(node)
+      }
+    }
+
+    this.allObjs.forEach(item => {
+      (this.listaPesquisaGrafo.has(item.id)) ? item.color = "orange" :
+        (this.listaSemelhantes.has(item.id)) ? item.color = "whitegreen" :
+          (this.listaPrincipal.includes(Number(item.id))) ? item.color = "red" :
+            (this.listaIdsPermitidos.includes(Number(item.id)) ? item.color = "blue" : item.color = "black")
+    });
+    console.log(this.allObjs)
   }
 
   fechar() {

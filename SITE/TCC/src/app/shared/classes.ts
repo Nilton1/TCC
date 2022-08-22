@@ -32,6 +32,7 @@ export class NodeDescription {
     greaterWidthAscendant: number
     name: string
     id:string
+    color:string = "black"
 
     constructor(directDescendants: pesquisador[],
         descendant: string[],
