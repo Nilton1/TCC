@@ -51,7 +51,7 @@ export class ResearchesTreesComponent implements OnInit {
   dadosPesquisaFiltrado: string[][] = []
   descendente: boolean = true
 
-  firstSelectedNode: string = '10011541'
+  firstSelectedNode: string = '7106042485461671'
   //secondSelectedNode : string = '10011541'
   secondSelectedNode: string = '10013485'
 
@@ -253,7 +253,7 @@ export class ResearchesTreesComponent implements OnInit {
     this.InstanciaGrafo = ForceGraph()(grafo).nodeRelSize(20)
       .d3AlphaDecay(0.002)
       .d3VelocityDecay(0.02)
-      .cooldownTime(100000)
+      .cooldownTime(60000)
       .linkColor(() => 'rgba(0,0,0,0.5)')
       .zoom(0.20).width(this.graphWidth).height(this.graphHeight)
       .nodeLabel(node => ("" + (this.allObjs.find((item) => Number(item.id) == node.id)?.name))).graphData(this.graphDataGlobal)
@@ -311,8 +311,8 @@ export class ResearchesTreesComponent implements OnInit {
       .nodePointerAreaPaint(this.nodePaint)
 
     this.InstanciaGrafo.d3Force('center')?.['strength'](0.4)
-    this.InstanciaGrafo.d3Force('link')?.['distance'](50.50)
-    this.InstanciaGrafo.d3Force('link')?.['strength'](0.18)
+    this.InstanciaGrafo.d3Force('link')?.['distance'](150.50)
+    this.InstanciaGrafo.d3Force('link')?.['strength'](0.15)
     this.InstanciaGrafo.d3Force('collide')?.['distance'](30)
     this.InstanciaGrafo.d3Force('collide')?.['strength'](4)
 
@@ -491,10 +491,10 @@ export class ResearchesTreesComponent implements OnInit {
 
 
         const RaizesIguais = this.FirstNode?.descendant.filter(value => this.SecondNode?.descendant.includes(value))
-
-
+        console.log(RaizesIguais)
+        
         RaizesIguais?.forEach(item => this.listaSemelhantes.add(Number(item)))
-
+        console.log(this.listaSemelhantes)
 
 
         let listaNumerosSet = new Set(this.listaNumeros)
@@ -609,17 +609,17 @@ export class ResearchesTreesComponent implements OnInit {
 
 
       for (const node of this.listaNodes) {
+        
         this.allObjs = this.allObjs.concat(node)
       }
     }
 
     this.allObjs.forEach(item => {
-      (this.listaPesquisaGrafo.has(item.id)) ? item.color = "orange" :
-        (this.listaSemelhantes.has(item.id)) ? item.color = "whitegreen" :
+      (this.listaPesquisaGrafo.has(Number(item.id))) ? item.color = "orange" :
+        (this.listaSemelhantes.has(Number(item.id))) ? item.color = "whitegreen" :
           (this.listaPrincipal.includes(Number(item.id))) ? item.color = "red" :
             (this.listaIdsPermitidos.includes(Number(item.id)) ? item.color = "blue" : item.color = "black")
     });
-    console.log(this.allObjs)
   }
 
   fechar() {
